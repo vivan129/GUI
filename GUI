@@ -1,0 +1,59 @@
+import sys
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtWidgets import QApplication, QMainWindow
+
+
+class MovingSquare(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Moving Square")
+        self.setGeometry(100, 100, 600, 600)
+        self.square_x = 100
+        self.square_y = 100
+        self.square_size = 20
+        self.speed = 5
+
+        # Track pressed keys
+        self.keys_pressed = set()
+
+        # Timer for smooth movement (game loop)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_position)
+        self.timer.start(16)  # roughly 60 FPS
+
+    def keyPressEvent(self, event):
+        self.keys_pressed.add(event.key())
+
+    def keyReleaseEvent(self, event):
+        if event.key() in self.keys_pressed:
+            self.keys_pressed.remove(event.key())
+
+    def update_position(self):
+        # Move according to pressed keys
+        if Qt.Key_Left in self.keys_pressed:
+            self.square_x -= self.speed
+        if Qt.Key_Right in self.keys_pressed:
+            self.square_x += self.speed
+        if Qt.Key_Up in self.keys_pressed:
+            self.square_y -= self.speed
+        if Qt.Key_Down in self.keys_pressed:
+            self.square_y += self.speed
+
+        # Boundary check
+        self.square_x = max(0, min(self.square_x, self.width() - self.square_size))
+        self.square_y = max(0, min(self.square_y, self.height() - self.square_size))
+
+        self.update()  # redraw the window
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setBrush(QColor(255, 0, 0))  # Red color
+        painter.drawRect(self.square_x, self.square_y, self.square_size, self.square_size)
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MovingSquare()
+    window.show()
+    sys.exit(app.exec_())
